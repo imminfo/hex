@@ -1,3 +1,5 @@
+[![Licence](https://img.shields.io/hexpm/l/plug.svg)](http://www.apache.org/licenses/LICENSE-2.0)
+
 # HEX
 HEX(HLA Extractor) is a simple HLA typing tool. It is designed to ???
 
