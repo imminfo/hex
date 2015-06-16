@@ -11,6 +11,8 @@ It depends only on Python3
 ### I. Building the database for HLA
 `hex_build.py`
 
+By default with the HEX comes the preprocessed database for IMGT <name here.gz> from <date here>.
+
 #### Loading the IMGT database with HLA nucleotide sequences
 
 1. ftp
