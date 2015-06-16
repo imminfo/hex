@@ -13,5 +13,10 @@ HLA 2nd type -> 3-4-5 exons only (?)
 C-value ("confuse value") is the probability that one allele is replaced with another by an error.
 estimating 1st and 5th exons for missing data
 
+### Preprocessing input .fastq files
+simple error correction
+filtering out sequences with the bad mean quality
+complex error correction like in BayesHammer? http://www.biomedcentral.com/1471-2164/14/S1/S7
+
 ### HLA extraction
 ???
