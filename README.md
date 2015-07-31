@@ -4,8 +4,12 @@
 HEX(HLA Extractor) is a simple HLA typing tool. It is designed to ???
 
 
-## Installation
-It depends only on Python3
+## Installation and dependencies
+It depends on 
+- bwa-mem
+- Python3
+- Perl
+- ncbi-blast
 
 
 ## Workflow
