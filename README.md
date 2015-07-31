@@ -24,8 +24,8 @@ By default with the HEX comes the preprocessed database for IMGT <name here.gz> 
 1. ftp
 2. processing to the fasta file with storing metadata
 
-1. HLA 1st type -> 2-3-4 exons only
-2. HLA 2nd type -> 3-4-5 exons only (?)
+1. HLA 1st type -> 2-3-4 exons only plus a little bit of the 1st exon
+2. HLA 2nd type -> 1-2-3 exons only
 
 #### 1b. Construction of the C-value matrix for alleles
 
