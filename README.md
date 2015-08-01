@@ -15,7 +15,7 @@ It depends on
 ## Workflow
 
 ### Step 1. Building the database for HLA
-`./hex_build [-i <optional input file with URLs>] [-o <optional output folder>]`
+`$./hex_build [-i <optional input file with URLs>] [-o <optional output folder>]`
 
 By default with the HEX comes the preprocessed database for IMGT <name here.gz> from <date here>.
 
@@ -34,7 +34,7 @@ estimating 1st and 5th exons for missing data
 
 
 ### Step 2. HLA extraction
-`./hex_extract <path to a folder with raw .fastq files>`
+`$./hex_extract <path to a folder with raw .fastq files>`
 
 #### 2a. Preprocessing input .fastq files
 
