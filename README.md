@@ -34,7 +34,7 @@ estimating 1st and 5th exons for missing data
 
 
 ### Step 2. HLA extraction
-`./hex_extract`
+`./hex_extract <path to a folder with raw .fastq files>`
 
 #### 2a. Preprocessing input .fastq files
 
