@@ -3,6 +3,7 @@
 # HEX
 HEX(HLA Extractor) is a simple HLA typing tool. It is designed to ???
 
+PaHLAVa - Probability assigning HLA variant aligner
 
 ## Installation and dependencies
 It depends on 
