@@ -1,3 +1,11 @@
+def num_lines(filepath):
+    res = 0
+    with open(filepath) as f:
+        for line in f:
+            res += 1
+    return res
+
+
 def log_progress(sequence, every=None, size=None):
     from ipywidgets import IntProgress, HTML, VBox
     from IPython.display import display
