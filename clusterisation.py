@@ -62,12 +62,31 @@ def classify(fqdata, low_threshold, high_threshold):
 
 
 def classify_fastq_file(filepath, replace_threshold, low_threshold, high_threshold):
+    def _stats(cls_seq, which_class):
+        print("\t", which_class, " seq:\t", len(cls_seq[which_class]))
+        print("(", round(len(cls_seq[which_class]) / sum(map(len, cls_seq), 4), ")", sep = "", end = ""))
+        print("\t", which_class, " rds:\t", len(sum(cls_seq[which_class].values())))
+        print("(", round(len(cls_seq[which_class]) / sum(map(lambda x: sum(x.values()), cls_seq), 4), ")", sep = "", end = ""))
+    
     cls_seq = [{}, {}, {}]
     for fqdata in FASTQParser(filepath):
         fqdata = replace_low_quality(fqdata, replace_threshold)
         cls = classify(fqdata, low_threshold, high_threshold)
         cls_seq[cls][fqdata.seq] = cls_seq[cls].get(fqdata.seq, 0) + 1
+    print("Classes:")
+    _stats(cls_seq, 0)
+    _stats(cls_seq, 1)
+    _stats(cls_seq, 2)
+    print()
     return cls_seq
+
+
+def N_clust(cls_seq, n_clust_hamm):
+    pass
+
+
+def H_clust(cls_seq, h_clust_hamm):
+    pass
     
 
 def merge_with_clusters(seq_dict, seq_threshold, qmed_threshold):
@@ -133,47 +152,36 @@ def merge_with_clusters(seq_dict, seq_threshold, qmed_threshold):
     return new_seq_dict
 
 
-def aggregate_sequences(f1, max_sequences, qpos_threshold, qmed_threshold, seq_threshold, out_seq = "tmp.topseq1.txt", out_blast = "tmp.blast1.txt"):
+def clusterise_sequences(f1, replace_threshold, low_threshold, high_threshold, out_seq = "tmp.topseq1.txt", out_blast = "tmp.blast1.txt"):
     prefix = f1[:f1.find(".fastq")]
-    majors = {}
-    minors = {}
-    r = FASTQParser(f1)
     print("Searching for unique sequences..."); d1 = {}
 
-    # Divide reads by major and minor 
-    for data1 in r:
-        data1 = replace_low_quality(data1, qpos_threshold)
-        # Divide sequences to two groups: below (minor) median and above (major) median group
-        if median(data1) >= qmed_threshold:
-            majors[data1.seq] = majors.get(data1.seq, 0) + 1
-        else:
-            minors[data1.seq] = minors.get(data1.seq, 0) + 1
-        d1[data1.seq] = d1.get(data1.seq, 0) + 1
+    classify_fastq_file(f1, replace_threshold, low_threshold, high_threshold)
 
 
     print("Clustering error sequences...")
-    d1 = merge_with_clusters(d1, seq_threshold, qmed_threshold)
+#     d1 = merge_with_clusters(d1, seq_threshold, qmed_threshold)
 
 
-    print("Writing results...")
+#     print("Writing results...")
 
-    with open(out_seq, 'w') as file:
-        i = 0
-        for key, val in reversed(sorted(d1.items(), key = lambda x: x[1])):
-            # print(val, " (", round(100 * val / sum(d1.values()), 4), "%)", sep = '')
-            print(val, key, sep = '\t', file = file)
-            i += 1
-            if i == max_sequences: break
-            # if val < 2: break
+#     with open(out_seq, 'w') as file:
+#         i = 0
+#         for key, val in reversed(sorted(d1.items(), key = lambda x: x[1])):
+#             # print(val, " (", round(100 * val / sum(d1.values()), 4), "%)", sep = '')
+#             print(val, key, sep = '\t', file = file)
+#             i += 1
+#             if i == max_sequences: break
+#             # if val < 2: break
 
-    ls = []
-    i = 0
-    for key, val in reversed(sorted(d1.items(), key = lambda x: x[1])):
-        ls.append(faseq(name = "sequence" + str(i) + "_" + str(val) + "_(" + str(round(100 * val / sum(d1.values()), 4)) + ")", seq = key, comm = ''))
-        i += 1
-        if i == max_sequences: break
-    write_fasta(f1 + ".seq.fasta.txt", ls)
-    os.system("blastn -query " + f1 + ".seq.fasta.txt" + " -db hlabase/hlabase.fasta -outfmt 6 -num_alignments 4 > " + out_blast)
+#     ls = []
+#     i = 0
+#     for key, val in reversed(sorted(d1.items(), key = lambda x: x[1])):
+#         ls.append(faseq(name = "sequence" + str(i) + "_" + str(val) + "_(" + str(round(100 * val / sum(d1.values()), 4)) + ")", seq = key, comm = ''))
+#         i += 1
+#         if i == max_sequences: break
+#     write_fasta(f1 + ".seq.fasta.txt", ls)
+#     os.system("blastn -query " + f1 + ".seq.fasta.txt" + " -db hlabase/hlabase.fasta -outfmt 6 -num_alignments 4 > " + out_blast)
 
 
 if __name__ == '__main__':
