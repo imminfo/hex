@@ -58,15 +58,18 @@ def classify(fqdata, low_threshold, high_threshold):
         return 1
     elif qmed >= high_threshold:
         return 2
-    return 0
+    else:
+        return 0
 
 
 def classify_fastq_file(filepath, replace_threshold, low_threshold, high_threshold):
     def _stats(cls_seq, which_class):
-        print("\t", which_class, " seq:\t", len(cls_seq[which_class]))
-        print("(", round(len(cls_seq[which_class]) / sum(map(len, cls_seq), 4), ")", sep = "", end = ""))
-        print("\t", which_class, " rds:\t", len(sum(cls_seq[which_class].values())))
-        print("(", round(len(cls_seq[which_class]) / sum(map(lambda x: sum(x.values()), cls_seq), 4), ")", sep = "", end = ""))
+        print("\t", which_class, " seq:\t", len(cls_seq[which_class]), sep = "", end = "")
+        print("(", round(len(cls_seq[which_class]) / sum(map(len, cls_seq)), 4), ")", sep = "")
+        print("\t", which_class, " rds:\t", sum(cls_seq[which_class].values()), sep = "", end = "")
+        print("(", round(len(cls_seq[which_class]) / sum(map(lambda x: sum(x.values()), cls_seq)), 4), ")", sep = "")
+    
+    print("Fastq records:\t", int(num_lines(filepath) / 4), sep = "")
     
     cls_seq = [{}, {}, {}]
     for fqdata in FASTQParser(filepath):
@@ -81,26 +84,20 @@ def classify_fastq_file(filepath, replace_threshold, low_threshold, high_thresho
     return cls_seq
 
 
-def N_clust(cls_seq, n_clust_hamm):
-    pass
-
-
-def H_clust(cls_seq, h_clust_hamm):
-    pass
+def X_clust(minors, majors, x_clust_hamm):
+    """
+    N-clust: merge bad sequences with all other sequences.
+    H-clust: merge medium quality sequences with the high quality ones.
+    """
     
-
-def merge_with_clusters(seq_dict, seq_threshold, qmed_threshold):
-    print("sum pre filter", sum(seq_dict.values()))
-    seq_dict = dict(filter(lambda x: x[1] >= seq_threshold, seq_dict.items()))
-    print("sum post filter", sum(seq_dict.values()))
-
     keys = list(seq_dict.keys())
     key_ind = dict([(keys[i], i) for i in range(len(keys))])
     cands = {}
-    merged_seq = {x: set([]) for x in keys}
+    merged_seq = {x: set([]) for x in majors}
+    
     for i in range(len(seq_dict) - 1):
         for j in range(i + 1, len(seq_dict)):
-            if hamm(keys[i], keys[j]):
+            if hamm(keys[i], keys[j], x_clust_hamm):
                 key = i
                 append_to = j
                 if seq_dict[keys[i]] > seq_dict[keys[j]]:
