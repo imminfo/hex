@@ -115,10 +115,13 @@ def X_clust(minors, majors, x_clust_hamm):
         for target in targets:
             merged_seq[major_keys[target]].add((minor_key, minors[minor_keys[minor_key]] / len(targets)))
 
-    new_minors = {x: minors[x] for x in minor_keys if x not in cands}
-            
+    cand_keys = set([minor_keys[k] for k in cands])
+    new_minors = {x: minors[x] for x in minor_keys if x not in cand_keys}
+    print("# candidates:", len(cands))
+    print("# distants", len(new_minors))
+        
     print("Making consensuses...")
-    sum_pre = sum(majors.values())
+#     sum_pre = sum(majors.values())
     n_merged = 0
     new_seq_dict = {}
     for seq, seq_ls in merged_seq.items():
@@ -127,12 +130,16 @@ def X_clust(minors, majors, x_clust_hamm):
             new_seq_dict[new_seq] = 0
         else:
             n_merged += 1
-        new_seq_dict[new_seq] += majors[seq]
+        new_seq_dict[new_seq] += majors[seq] + sum([x[1] for x in merged_seq[seq]])
 
     print("# merged:", n_merged)
-    sum_post = sum(new_seq_dict.values())
-    if sum_pre != sum_post:
-        print("Sums are not equal!", sum_pre, "vs.", sum_post)
+#     sum_post = sum(new_seq_dict.values())
+#     if sum_pre != sum_post:
+#         print("Sums are not equal!", sum_pre, "vs.", sum_post)
+
+    for seq in new_seq_dict:
+        new_seq_dict[seq] = round(new_seq_dict[seq], 3)
+
     return new_minors, new_seq_dict
 
 
@@ -158,23 +165,31 @@ def write_and_blast(seq_dict, f1, out_seq, out_blast, max_sequences):
 def clusterise_sequences(f1, replace_threshold, low_threshold, high_threshold, n_clust_hamm, h_clust_hamm, max_sequences, out_seq_prefix = "tmp.topseq1", out_blast_prefix = "tmp.blast1"):
     prefix = f1[:f1.find(".fastq")]
     
-    print("Searching for unique sequences...")
+    
+    print("*** Searching for unique sequences ***")
     cls_seq = classify_fastq_file(f1, replace_threshold, low_threshold, high_threshold)
 
     
-    print("Clustering error sequences...")    
-    _, cls_seq[1] = X_clust(cls_seq[0], cls_seq[1], n_clust_hamm)
-    cls_seq[1], cls_seq[2] = X_clust(cls_seq[1], cls_seq[2], h_clust_hamm)
+    print("*** N-clusterisation ***")    
+    cls_seq[0], cls_seq[1] = X_clust(cls_seq[0], cls_seq[1], n_clust_hamm)
+    print("Intermediate statistics by class:")
+    cls_stats(cls_seq, 0)
+    cls_stats(cls_seq, 1)
+    print()
     
     
+    print("*** H-clusterisation ***")
+    cls_seq[1], cls_seq[2] = X_clust(cls_seq[1], cls_seq[2], h_clust_hamm)    
     print("Final statistics by class:")
     cls_stats(cls_seq, 1)
     cls_stats(cls_seq, 2)
     print()
-    
-    print("Writing results...")
+
+          
+    print("*** Writing results ***")
     write_and_blast(cls_seq[1], f1 + ".minor", out_seq_prefix + ".minor.txt", out_blast_prefix + ".minor.txt", max_sequences)
     write_and_blast(cls_seq[2], f1 + ".major", out_seq_prefix + ".major.txt", out_blast_prefix + ".major.txt", max_sequences)
+    print("\n*** DONE ***")
     
 
 if __name__ == '__main__':
