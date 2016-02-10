@@ -5,6 +5,8 @@ import math
 import statistics
 from collections import namedtuple
 
+import seaborn as sns
+
 from fasta import *
 from fastq import *
 from log_progress import *
@@ -22,7 +24,6 @@ def replace_low_quality(data, q_threshold):
             res += nuc
 
     return FASTQData(seq = res, qual = data.qual, name = data.name, attr = data.attr)
-
 
 
 def median(data):
@@ -54,7 +55,7 @@ def make_best_pos_consensus(orig_seq, orig_num, seq_list):
 
 def classify(fqdata, low_threshold, high_threshold):
     qmed = median(fqdata)
-    if qmed >= low_threshold and qmed < high_threshold:
+    if qmed > low_threshold and qmed < high_threshold:
         return 1
     elif qmed >= high_threshold:
         return 2
@@ -72,16 +73,22 @@ def cls_stats(cls_seq, which_class):
 def classify_fastq_file(filepath, replace_threshold, low_threshold, high_threshold):    
     print("Fastq records:\t", int(num_lines(filepath) / 4), sep = "")
     
+    q_distr = []
+    
     cls_seq = [{}, {}, {}]
     for fqdata in FASTQParser(filepath):
         fqdata = replace_low_quality(fqdata, replace_threshold)
         cls = classify(fqdata, low_threshold, high_threshold)
         cls_seq[cls][fqdata.seq] = cls_seq[cls].get(fqdata.seq, 0) + 1
+        q_distr.append(median(fqdata))
     print("Classes:")
     cls_stats(cls_seq, 0)
     cls_stats(cls_seq, 1)
     cls_stats(cls_seq, 2)
     print()
+    
+    sns.distplot(q_distr, bins = max(q_distr) - min(q_distr) + 1, label = "Median quality distribution");
+    
     return cls_seq
 
 
