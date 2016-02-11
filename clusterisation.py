@@ -6,6 +6,7 @@ import statistics
 from collections import namedtuple
 
 import seaborn as sns
+import numpy as np
 
 from fasta import *
 from fastq import *
@@ -17,13 +18,16 @@ Read = namedtuple('Read', 'index seq qual')
 
 def replace_low_quality(data, q_threshold):
     res = ''
+    res_q = ''
     for nuc, q in zip(data.seq, data.qual):
         if ord(q) - ord('!') <= q_threshold:
             res += 'N'
+            res_q += '!'
         else:
             res += nuc
+            res_q += q
 
-    return FASTQData(seq = res, qual = data.qual, name = data.name, attr = data.attr)
+    return FASTQData(seq = res, qual = res_q, name = data.name, attr = data.attr)
 
 
 def median(data):
@@ -75,12 +79,28 @@ def classify_fastq_file(filepath, replace_threshold, low_threshold, high_thresho
     
     q_distr = []
     
+    # median - sequences
+    seqmed = {}
     cls_seq = [{}, {}, {}]
     for fqdata in FASTQParser(filepath):
         fqdata = replace_low_quality(fqdata, replace_threshold)
-        cls = classify(fqdata, low_threshold, high_threshold)
-        cls_seq[cls][fqdata.seq] = cls_seq[cls].get(fqdata.seq, 0) + 1
-        q_distr.append(median(fqdata))
+        med = median(fqdata)
+        q_distr.append(med)
+        if med not in seqmed: seqmed[med] = []
+        seqmed[med].append(fqdata.seq)
+        
+    lo, hi = np.trunc(np.percentile(q_distr, [low_threshold, high_threshold]))
+    print("Lo / hi percentile:", (lo, hi), sep = "\t")
+        
+    for med in seqmed:
+        cls = 2
+        if med < lo:
+            cls = 0
+        elif med >= lo and med < hi:
+            cls = 1
+        for seq in seqmed[med]:
+            cls_seq[cls][seq] = cls_seq[cls].get(seq, 0) + 1
+        
     print("Classes:")
     cls_stats(cls_seq, 0)
     cls_stats(cls_seq, 1)
@@ -191,10 +211,14 @@ def clusterise_sequences(f1, replace_threshold, low_threshold, high_threshold, n
     cls_stats(cls_seq, 1)
     cls_stats(cls_seq, 2)
     print()
+    
+    cls_seq[2].extend(cls_seq[1])
 
+    print("Move minors to the major class.")
+    print("Final number of sequences:", len(cls_seq[2]), sep = "\t")
           
     print("*** Writing results ***")
-    write_and_blast(cls_seq[1], f1 + ".minor", out_seq_prefix + ".minor.txt", out_blast_prefix + ".minor.txt", max_sequences)
+#     write_and_blast(cls_seq[1], f1 + ".minor", out_seq_prefix + ".minor.txt", out_blast_prefix + ".minor.txt", max_sequences)
     write_and_blast(cls_seq[2], f1 + ".major", out_seq_prefix + ".major.txt", out_blast_prefix + ".major.txt", max_sequences)
     print("\n*** DONE ***")
     
