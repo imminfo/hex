@@ -90,8 +90,9 @@ def classify_fastq_file(filepath, replace_threshold, low_threshold, high_thresho
         seqmed[med].append(fqdata.seq)
         
     lo, hi = np.trunc(np.percentile(q_distr, [low_threshold, high_threshold]))
-    print("Lo / hi percentile:", (lo, hi), sep = "\t")
+    print("Lo / hi percentile median values:", (lo, hi), sep = "\t")
         
+    kmers = {}
     for med in seqmed:
         cls = 2
         if med < lo:
@@ -100,6 +101,9 @@ def classify_fastq_file(filepath, replace_threshold, low_threshold, high_thresho
             cls = 1
         for seq in seqmed[med]:
             cls_seq[cls][seq] = cls_seq[cls].get(seq, 0) + 1
+            if cls == 0 or cls == 1:
+                kmers[seq[10:20]] = kmers.get(seq[10:20], 0) + 1
+    print(sorted(kmers.items(), reverse = True, key = lambda x: x[1]))
         
     print("Classes:")
     cls_stats(cls_seq, 0)
@@ -107,7 +111,8 @@ def classify_fastq_file(filepath, replace_threshold, low_threshold, high_thresho
     cls_stats(cls_seq, 2)
     print()
     
-    sns.distplot(q_distr, bins = max(q_distr) - min(q_distr) + 1, label = "Median quality distribution");
+#     sns.distplot(list(kmers.values()), bins = max(list(kmers.values())) - min(list(kmers.values())) + 1, axlabel = "Kmer distribution");
+    sns.distplot(q_distr, bins = max(q_distr) - min(q_distr) + 1, axlabel = "Median quality distribution");
     
     return cls_seq
 
@@ -212,7 +217,7 @@ def clusterise_sequences(f1, replace_threshold, low_threshold, high_threshold, n
     cls_stats(cls_seq, 2)
     print()
     
-    cls_seq[2].extend(cls_seq[1])
+    cls_seq[2].update(cls_seq[1])
 
     print("Move minors to the major class.")
     print("Final number of sequences:", len(cls_seq[2]), sep = "\t")
